@@ -5,9 +5,21 @@ import java.net.MalformedURLException;
 import java.rmi.*;
 import java.rmi.server.UnicastRemoteObject;
 
-public class FileImpl extends UnicastRemoteObject    implements ClientInterface
+public class ClientImplementation extends UnicastRemoteObject    implements ClientInterface
 {
-	public String solicitarServicio_1(String argumento1 , String argumento2)
+
+	private String nombre;
+	public ClientImplementation(String s) throws RemoteException 
+	{
+		super();
+		nombre = s;
+	}
+
+
+
+	public String solicitarServicio_1(String argumento1 , String argumento2){
+		return "";
+	}
 
 
 

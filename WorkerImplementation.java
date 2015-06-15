@@ -5,7 +5,7 @@ import java.net.MalformedURLException;
 import java.rmi.*;
 import java.rmi.server.UnicastRemoteObject;
 
-public class FileImpl extends UnicastRemoteObject    implements WorkerInterface
+public class WorkerImplementation extends UnicastRemoteObject    implements WorkerInterface
 {
 	public String despacharServicio_1(String argumento1 , String argumento2)
 
