@@ -1,4 +1,5 @@
 //acava la implementacion del servidor (Server)
+//java Server -p 20771
 
 import java.io.*;
 import java.rmi.*;
@@ -11,21 +12,21 @@ public class Server{
 		
 		if(argv.length < 2) 
 		{
-			System.out.println("Uso: java Server -l puertoLocal");
+			System.out.println("Uso: java Server -p puertoLocal");
 			System.exit(0);
 		}
 		String puertoLocal="";
 		int indexArgs = 0;
 		while (indexArgs<argv.length)
 		{
-			if(argv[indexArgs].equals("-l"))
+			if(argv[indexArgs].equals("-p"))
 			{
 				indexArgs++;
 				puertoLocal=argv[indexArgs];
 			}
 			else
 			{
-				System.out.println("ERROR: java s_rmifs -l puertoLocal ");
+				System.out.println("ERROR: java s_rmifs -p puertoLocal ");
 				System.exit(0);
 			}
 		

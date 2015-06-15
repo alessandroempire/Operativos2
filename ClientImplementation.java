@@ -18,7 +18,7 @@ public class ClientImplementation extends UnicastRemoteObject    implements Clie
 
 
 	public String solicitarServicio_1(String argumento1 , String argumento2){
-		return "";
+		return "servicio 1 solicitado";
 	}
 
 
