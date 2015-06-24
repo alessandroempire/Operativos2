@@ -55,7 +55,7 @@ public class Servidor {
 					Iterator<String> iterador = nodos.iterator();
 					while (iterador.hasNext()) {
 						String IP = iterador.next();
-						if IP.equals(my_IP) {
+						if (IP.equals(my_IP)) {
 							s.convertir_sched();
 							if (L1.isAlive()){
 								L1.destroy();
@@ -68,7 +68,7 @@ public class Servidor {
 							}							
 							daemon = new comprobador_sched();
 													
-							Thread.destroy();
+							this.destroy();
 							}							
 						try {
 							Servicios nodo = (Servicios) 
@@ -76,7 +76,7 @@ public class Servidor {
 							if (!nodo.estado()) {
 							System.out.println("Se detecto un error en "+IP+" sera sacado de los nodos registrados");
 							iterador.remove();
-							Nodos.remove(IP);
+							nodos.remove(IP);
 							}
 							else{
 							my_IP=nodo.registro();
@@ -89,7 +89,7 @@ public class Servidor {
 						catch (Exception e) {
 							System.out.println("Problema: " + e + " " + IP+" Sera sacado");
 							iterador.remove();
-							Nodos.remove(IP);
+							nodos.remove(IP);
 							continue;
 						}		
 					}
@@ -128,6 +128,7 @@ public class Servidor {
 	        socket.receive(packet); 
 
 	        //Packet received
+	        
 	        System.out.println(getClass().getName() + ">>>Discovery packet received from: " + packet.getAddress().getHostAddress());
 	        //See if the packet holds the right command (message)
 	        String message = new String(packet.getData()).trim();
@@ -151,7 +152,6 @@ public class Servidor {
 	try {
 	//Open a random port to send the package
 	DatagramSocket c = new DatagramSocket();
-	c.setSoTimeout(10000);
 	c.setBroadcast(true);
 
 	byte[] sendData = "1".getBytes();
@@ -173,6 +173,7 @@ public class Servidor {
 
 		// Send the broadcast package!
 		try {
+			System.out.println("a punto de enviar " );
 			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, broadcast, 9159);
 			c.send(sendPacket);
 		} catch (Exception e) {
@@ -183,21 +184,25 @@ public class Servidor {
 	//Wait for a response
 	byte[] recvBuf = new byte[1];
 	DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
+	c.setSoTimeout(10000);
+	System.out.println("esperando respuesta " );
+	try {
 	c.receive(receivePacket);
-
+	
 	//We have a response
 	System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
 	IP = receivePacket.getAddress().getHostAddress();
 	//Close the port!
 	c.close();
-	} catch (IOException ex) {
-	System.out.println("Trouble: " + ex);
-	}	
-	catch (SocketTimeoutException ex) {
+	} catch (SocketTimeoutException ex) {
 	System.out.println("No hay schedulers activos, sere uno: " + ex);
 		L1 = new listener();
 		daemon = new comprobador_sched();
 	}	
+	} catch (IOException ex) {
+	System.out.println("Trouble: " + ex);
+	}	
+	
 	return IP;
 	
 	}
@@ -207,7 +212,7 @@ public class Servidor {
 
 	
 		s = null;
-		Servidor1 S1 = new Servidor1();
+		Servidor S1 = new Servidor();
     
 		try {
 
@@ -226,7 +231,7 @@ public class Servidor {
 		}
 
 		try {
-			
+		
 		s = new ServiciosImp(true);
     
 			// Registra con el nombre CalculatorService al objeto c 
@@ -238,11 +243,17 @@ public class Servidor {
 			System.out.println("Trouble: " + e);
 		}
 		
+		System.out.println("antes de descubrir ");
+		
 		sched_IP = S1.descubrir_schd();
 		if (sched_IP != null) {
+		try {		
 		Servicios scheduler = (Servicios) 
 		Naming.lookup("rmi://" + sched_IP + ":" + "9158"+ "/prueba");
 	    my_IP=scheduler.registro();
+	    } catch (Exception e) {
+			System.out.println("Trouble: " + e);
+		}
 		}
 		
     }

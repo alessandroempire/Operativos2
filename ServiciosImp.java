@@ -21,9 +21,11 @@ public  class ServiciosImp
     public String registro()
 	throws java.rmi.RemoteException{
 		try {
-		IPS.add(RemoteServer.getClientHost());
-		System.out.println("SE ha registrado el siguiente worker: "+RemoteServer.getClientHost()+"\n");
-		return RemoteServer.getClientHost();
+		if (! InetAddress.getLocalHost().getHostAddress().equals(RemoteServer.getClientHost())){
+			IPS.add(RemoteServer.getClientHost());
+			System.out.println("SE ha registrado el siguiente worker: "+RemoteServer.getClientHost()+"\n");
+			return RemoteServer.getClientHost();
+		}
 		}
 		catch (Exception e) {
 			System.out.println("Trouble: " + e);
