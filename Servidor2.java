@@ -6,10 +6,37 @@ import java.util.*;
 
 public class Servidor2 {
 
+	public static Servicios s;
+	public static Vector<String> vector_sched = new Vector<String>();
+	public static String my_IP = null;
+	public static String sched_IP = null;
+	public static Vector<String> nodos = new Vector<String>();
+
+
 	public Servidor2() {
-	super();
+		super();
 	};
 
+	
+	public static class comprobador_nodo extends Thread {
+	public comprobador_nodo(){
+	start();
+	}
+		
+	public void run (){
+		while(true){
+			try {
+				System.out.println("comprobando al sched");
+				s.estado_vector(vector_sched);
+				Thread.sleep(20000);					
+			}
+			catch (Exception e) {
+					System.out.println("Problema: " + e );
+			}	
+		}
+	}
+	
+	}
 
 	public String descubrir_schd() {
 		
@@ -64,8 +91,7 @@ public class Servidor2 {
 	}
    
     public static void main(String[] args) {
-	
-	String IP;
+		
     Servidor2 S2 = new Servidor2();
     
 		try {
@@ -85,7 +111,7 @@ public class Servidor2 {
 		}
 
 		try {
-			Servicios s = new ServiciosImp();
+			s = new ServiciosImp(false);
 
 // 			Registra con el nombre CalculatorService al objeto c 
 // 			en el Registry que se encuentra el el host <localhost>
@@ -94,13 +120,18 @@ public class Servidor2 {
 			Naming.rebind("rmi://localhost:"+"9158"+"/prueba", s);
 		
 		System.out.println("Probando");
-		IP = S2.descubrir_schd();
+		sched_IP = S2.descubrir_schd();
+		System.out.println(sched_IP);
+		vector_sched.add(sched_IP);
 		Servicios scheduler = (Servicios) 
-		Naming.lookup("rmi://" + IP + ":" + "9158"+ "/prueba");
-	    scheduler.registro(InetAddress.getLocalHost().getHostAddress());
+		Naming.lookup("rmi://" + sched_IP + ":" + "9158"+ "/prueba");
+	    my_IP=scheduler.registro();
+	    
 	    System.out.println("Listo");
 	    System.out.println("viendo el vector");
 	    System.out.println(scheduler.paso_de_vector());
+	    nodos = (Vector)scheduler.paso_de_vector().clone();
+	    comprobador_nodo daemon_nodo = new comprobador_nodo();
 	   
 	    }
 	     catch (Exception e) {

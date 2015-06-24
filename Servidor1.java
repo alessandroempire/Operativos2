@@ -4,7 +4,107 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class Servidor1 {
+public class Servidor {
+
+	public static Servicios s;
+	public static Vector<String> vector_sched = new Vector<String>();
+	public static String my_IP = null;
+	public static String sched_IP = null;
+	public static Vector<String> nodos = new Vector<String>();
+	public static boolean soy_sched = false;
+	public static listener L1;
+	public static comprobador_sched daemon;
+	public static comprobador_sched daemon_nodo;
+	public static Servicios scheduler;
+	
+	
+	public Servidor() {
+		super();
+	}
+
+	public static class comprobador_sched extends Thread {
+			
+	public comprobador_sched(){
+	start();
+	}
+		
+	public void run (){
+		while(true){
+			try {
+				s.estado_vector(((ServiciosImp)s).IPS);
+				Thread.sleep(20000);					
+			}
+			catch (Exception e) {
+					System.out.println("Problema: " + e );
+			}	
+		}
+	}
+	}
+	
+	public static class comprobador_nodo extends Thread {
+	public comprobador_nodo(){
+	start();
+	}
+		
+	public void run (){
+		while(true){
+			try {
+				s.estado_vector(vector_sched);
+				if (vector_sched.isEmpty()){
+				// Se perdio la conexion con el scheduler
+					Iterator<String> iterador = nodos.iterator();
+					while (iterador.hasNext()) {
+						String IP = iterador.next();
+						if IP.equals(my_IP) {
+							s.convertir_sched();
+							if (L1.isAlive()){
+								L1.destroy();
+							}	
+							L1 = new listener();
+							iterador.remove();
+							nodos.remove(IP);
+							if (daemon.isAlive()){
+								daemon.destroy();
+							}							
+							daemon = new comprobador_sched();
+													
+							Thread.destroy();
+							}							
+						try {
+							Servicios nodo = (Servicios) 
+							Naming.lookup("rmi://" + IP + ":" + "9158"+ "/prueba");
+							if (!nodo.estado()) {
+							System.out.println("Se detecto un error en "+IP+" sera sacado de los nodos registrados");
+							iterador.remove();
+							Nodos.remove(IP);
+							}
+							else{
+							my_IP=nodo.registro();
+							sched_IP = IP;
+							vector_sched = new Vector<String>();
+							vector_sched.add(IP);
+							break;
+							}
+						}
+						catch (Exception e) {
+							System.out.println("Problema: " + e + " " + IP+" Sera sacado");
+							iterador.remove();
+							Nodos.remove(IP);
+							continue;
+						}		
+					}
+					
+				}
+				nodos = (Vector)scheduler.paso_de_vector().clone();
+				Thread.sleep(20000);					
+			}
+			catch (Exception e) {
+					System.out.println("Problema: " + e );
+			}	
+		}
+	}
+	
+	}
 
 	public static class listener extends Thread {
 	
@@ -51,6 +151,7 @@ public class Servidor1 {
 	try {
 	//Open a random port to send the package
 	DatagramSocket c = new DatagramSocket();
+	c.setSoTimeout(10000);
 	c.setBroadcast(true);
 
 	byte[] sendData = "1".getBytes();
@@ -92,6 +193,11 @@ public class Servidor1 {
 	} catch (IOException ex) {
 	System.out.println("Trouble: " + ex);
 	}	
+	catch (SocketTimeoutException ex) {
+	System.out.println("No hay schedulers activos, sere uno: " + ex);
+		L1 = new listener();
+		daemon = new comprobador_sched();
+	}	
 	return IP;
 	
 	}
@@ -99,8 +205,9 @@ public class Servidor1 {
    
     public static void main(String[] args) {
 
-		listener L1 = new listener();
 	
+		s = null;
+		Servidor1 S1 = new Servidor1();
     
 		try {
 
@@ -119,8 +226,9 @@ public class Servidor1 {
 		}
 
 		try {
-			Servicios s = new ServiciosImp();
-
+			
+		s = new ServiciosImp(true);
+    
 			// Registra con el nombre CalculatorService al objeto c 
 			// en el Registry que se encuentra el el host <localhost>
 			// y puerto <port>
@@ -129,5 +237,13 @@ public class Servidor1 {
 		} catch (Exception e) {
 			System.out.println("Trouble: " + e);
 		}
+		
+		sched_IP = S1.descubrir_schd();
+		if (sched_IP != null) {
+		Servicios scheduler = (Servicios) 
+		Naming.lookup("rmi://" + sched_IP + ":" + "9158"+ "/prueba");
+	    my_IP=scheduler.registro();
+		}
+		
     }
 }
