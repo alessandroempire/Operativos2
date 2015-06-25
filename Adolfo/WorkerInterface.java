@@ -1,8 +1,5 @@
 //aca va la implementacion del Worker (este archivo solo lo tendran el Worker y el Server)
 
-
-import java.net.MalformedURLException;
-import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 

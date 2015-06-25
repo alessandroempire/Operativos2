@@ -1,7 +1,6 @@
 //acava la implementacion del servidor (Server)
 //java Server -p 20771
 
-import java.io.*;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 
