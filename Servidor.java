@@ -11,10 +11,9 @@ public class Servidor {
 	public static String my_IP = null;
 	public static String sched_IP = null;
 	public static Vector<String> nodos = new Vector<String>();
-	public static boolean soy_sched = false;
 	public static listener L1;
 	public static comprobador_sched daemon;
-	public static comprobador_sched daemon_nodo;
+	public static comprobador_nodo daemon_nodo;
 	public static Servicios scheduler;
 	
 	
@@ -50,25 +49,24 @@ public class Servidor {
 		while(true){
 			try {
 				s.estado_vector(vector_sched);
-				if (vector_sched.isEmpty()){
+				if (!vector_sched.isEmpty()) {
+				nodos = (Vector)scheduler.paso_de_vector().clone();
+				}
+				else{
 				// Se perdio la conexion con el scheduler
 					Iterator<String> iterador = nodos.iterator();
-					while (iterador.hasNext()) {
+					while (iterador.hasNext()) {						
 						String IP = iterador.next();
+						
 						if (IP.equals(my_IP)) {
 							s.convertir_sched();
-							if (L1.isAlive()){
-								L1.destroy();
-							}	
 							L1 = new listener();
 							iterador.remove();
 							nodos.remove(IP);
-							if (daemon.isAlive()){
-								daemon.destroy();
-							}							
 							daemon = new comprobador_sched();
-													
-							this.destroy();
+							System.out.println("Me he convertido en Scheduler"); 
+							return;
+							
 							}							
 						try {
 							Servicios nodo = (Servicios) 
@@ -95,11 +93,12 @@ public class Servidor {
 					}
 					
 				}
-				nodos = (Vector)scheduler.paso_de_vector().clone();
+				
 				Thread.sleep(20000);					
 			}
 			catch (Exception e) {
 					System.out.println("Problema: " + e );
+					break;
 			}	
 		}
 	}
@@ -148,62 +147,75 @@ public class Servidor {
 	public String descubrir_schd() {
 		
 		// Find the server using UDP broadcast
+	int sec = 0;
 	String IP = "";
-	try {
-	//Open a random port to send the package
-	DatagramSocket c = new DatagramSocket();
-	c.setBroadcast(true);
-
-	byte[] sendData = "1".getBytes();
-
-	// Broadcast the message over all the network interfaces
-	Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-	while (interfaces.hasMoreElements()) {
-		NetworkInterface networkInterface = interfaces.nextElement();
-
-		if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-		continue; // Don't want to broadcast to the loopback interface
-		}
-
-		for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-		InetAddress broadcast = interfaceAddress.getBroadcast();
-		if (broadcast == null) {
-			continue;
-		}
-
-		// Send the broadcast package!
+	while (sec<=10) {
 		try {
-			System.out.println("a punto de enviar " );
-			DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, broadcast, 9159);
-			c.send(sendPacket);
-		} catch (Exception e) {
-		}
-		
-		}
+			//Open a random port to send the package
+			DatagramSocket c = new DatagramSocket();
+			c.setBroadcast(true);
+
+			byte[] sendData = "1".getBytes();
+
+			// Broadcast the message over all the network interfaces
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface networkInterface = interfaces.nextElement();
+
+				if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+					continue; // Don't want to broadcast to the loopback interface
+				}
+
+				for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+					InetAddress broadcast = interfaceAddress.getBroadcast();
+					if (broadcast == null) {
+						continue;
+					}
+					// Send the broadcast package!
+					try {
+						System.out.println("enviando " );
+						DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, broadcast, 9159);
+						c.send(sendPacket);
+					} catch (Exception e) {
+					}				
+				}
+			}
+			//Wait for a response
+			byte[] recvBuf = new byte[1];
+			DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
+			try {
+				c.setSoTimeout(1000);
+				c.receive(receivePacket);
+				
+				//We have a response
+				System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
+				IP = receivePacket.getAddress().getHostAddress();
+				//Close the port!
+				c.close();
+				return IP;
+			} 		catch (Exception e) {
+					}				
+			} catch (IOException ex) {
+				System.out.println("Trouble: " + ex);
+			}
+			try {
+			 Thread.sleep(1000);
+			 sec++;
+			}catch (Exception e) {
+				System.out.println("Problema: " + e );
+			}
 	}
-	//Wait for a response
-	byte[] recvBuf = new byte[1];
-	DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-	c.setSoTimeout(10000);
-	System.out.println("esperando respuesta " );
+	System.out.println("No hay schedulers activos, sere uno: " );
+	L1 = new listener();
+	daemon = new comprobador_sched();
 	try {
-	c.receive(receivePacket);
+	s.convertir_sched();
+	}catch (Exception e) {
+				System.out.println("Problema: " + e );
+	}
+	return null;
 	
-	//We have a response
-	System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
-	IP = receivePacket.getAddress().getHostAddress();
-	//Close the port!
-	c.close();
-	} catch (SocketTimeoutException ex) {
-	System.out.println("No hay schedulers activos, sere uno: " + ex);
-		L1 = new listener();
-		daemon = new comprobador_sched();
-	}	
-	} catch (IOException ex) {
-	System.out.println("Trouble: " + ex);
-	}	
-	
-	return IP;
+
 	
 	}
 
@@ -232,7 +244,7 @@ public class Servidor {
 
 		try {
 		
-		s = new ServiciosImp(true);
+		s = new ServiciosImp(false);
     
 			// Registra con el nombre CalculatorService al objeto c 
 			// en el Registry que se encuentra el el host <localhost>
@@ -248,9 +260,12 @@ public class Servidor {
 		sched_IP = S1.descubrir_schd();
 		if (sched_IP != null) {
 		try {		
-		Servicios scheduler = (Servicios) 
+		scheduler = (Servicios) 
 		Naming.lookup("rmi://" + sched_IP + ":" + "9158"+ "/prueba");
 	    my_IP=scheduler.registro();
+	    vector_sched.add(sched_IP);
+	    daemon_nodo = new comprobador_nodo();
+	    
 	    } catch (Exception e) {
 			System.out.println("Trouble: " + e);
 		}
