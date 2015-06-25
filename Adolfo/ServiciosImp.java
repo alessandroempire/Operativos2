@@ -1,9 +1,6 @@
 import java.util.*;
 import java.rmi.server.RemoteServer;
 import java.rmi.*;
-import java.rmi.registry.*;
-import java.io.*;
-import java.net.*;
 
 public  class ServiciosImp 
     extends java.rmi.server.UnicastRemoteObject
@@ -80,5 +77,20 @@ public  class ServiciosImp
 	throws java.rmi.RemoteException{
 	soy_sched = true;
 	};
+        
+        //Servicio que devuelve la hora
+        public long get_time() throws java.rmi.RemoteException{
+            return System.currentTimeMillis();
+        }
+        
+        //Servicio que calcula el n-esimo fibonacci
+        public int fibonacci(int n) throws java.rmi.RemoteException{
+            if (n == 0)
+                return 0;
+            else if (n == 1)
+                return 1;
+            else
+                return fibonacci(n-1) + fibonacci(n - 2);
+        }
     
 }

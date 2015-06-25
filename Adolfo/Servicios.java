@@ -4,10 +4,10 @@ import java.util.*;
 public interface Servicios 
     extends java.rmi.Remote {
 
-    public String registro()
-	throws java.rmi.RemoteException;
+        public String registro()
+        throws java.rmi.RemoteException;
 	
-	 public Vector<String> paso_de_vector()
+	public Vector<String> paso_de_vector()
 	throws java.rmi.RemoteException;
 	
 	public boolean estado()
@@ -21,5 +21,10 @@ public interface Servicios
 	
 	public void convertir_sched()
 	throws java.rmi.RemoteException;
+        
+        public long get_time()
+        throws java.rmi.RemoteException;
 	    
+        public int fibonacci(int n)
+        throws java.rmi.RemoteException;
 }
