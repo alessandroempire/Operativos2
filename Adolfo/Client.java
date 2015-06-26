@@ -48,17 +48,22 @@ public class Client
 			indexArgs++;
 		}
 
+                //Encontrar la direccion del servidor
+                serverDir = descubrir_schd();
+                
 		String name = "rmi://" + serverDir + ":"+serverPort+ "/ScheduleServer";
 		ClientInterface ci = (ClientInterface) Naming.lookup(name);
 
+                //Hacer la llamdaa
 		System.out.print(ci.solicitarServicio_1("get_time","get_time"));
+                System.out.print(ci.solicitarServicio_1("fibonacci","fibonacci"));
 
 		System.exit(0);
 
 	}
         
         
-	public String descubrir_schd() {
+	public static String descubrir_schd() {
 		
 		// Find the server using UDP broadcast
 	int sec = 0;
@@ -102,7 +107,7 @@ public class Client
 				c.receive(receivePacket);
 				
 				//We have a response
-				System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
+				//System.out.println(getClass().getName() + ">>> Broadcast response from server: " + receivePacket.getAddress().getHostAddress());
 				IP = receivePacket.getAddress().getHostAddress();
 				//Close the port!
 				c.close();
