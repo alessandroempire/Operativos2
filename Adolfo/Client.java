@@ -48,10 +48,10 @@ public class Client
 			indexArgs++;
 		}
 
-		String name = "//" + serverDir+":"+serverPort+ "/ScheduleServer";
+		String name = "rmi://" + serverDir + ":"+serverPort+ "/ScheduleServer";
 		ClientInterface ci = (ClientInterface) Naming.lookup(name);
 
-		System.out.print(ci.solicitarServicio_1("",""));
+		System.out.print(ci.solicitarServicio_1("get_time","get_time"));
 
 		System.exit(0);
 
@@ -119,16 +119,6 @@ public class Client
 				System.out.println("Problema: " + e );
 			}
 	}
-        
-	System.out.println("No hay schedulers activos, sere uno: " );
-	
-//        L1 = new listener();
-//	daemon = new comprobador_sched();
-//	try {
-//	s.convertir_sched();
-//	}catch (Exception e) {
-//				System.out.println("Problema: " + e );
-//	}
 	return null;
 	}
 
